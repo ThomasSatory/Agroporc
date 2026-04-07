@@ -451,7 +451,7 @@ async def _evaluer_et_sauver(plats: list[dict]) -> dict:
 # ── Point d'entrée ──────────────────────────────────────────────────────────
 
 def main():
-    usage = "Usage: python main.py [semaine|jour]"
+    usage = "Usage: python main.py [semaine|jour|commentaires <personnage>]"
 
     if len(sys.argv) < 2:
         print(usage)
@@ -463,6 +463,14 @@ def main():
         asyncio.run(run_semaine())
     elif mode == "jour":
         asyncio.run(run_jour())
+    elif mode == "commentaires":
+        if len(sys.argv) < 3:
+            print("Usage: python main.py commentaires <personnage>")
+            print("  Génère les commentaires pour un seul personnage et les injecte")
+            print("  dans commentaires_semaine.json existant.")
+            sys.exit(1)
+        prenom = sys.argv[2]
+        comment_agent.generate_commentaires_personnage(prenom)
     else:
         print(f"Mode inconnu : {mode}")
         print(usage)

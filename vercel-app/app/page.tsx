@@ -63,7 +63,8 @@ function WeekView({ weekPdj }: { weekPdj: PdjEntry[] }) {
             return (
               <button
                 key={pdj.date}
-                className={`day-tab flex-1 flex flex-col items-center gap-0.5 py-2 px-3 border-none rounded-[calc(var(--radius)-4px)] bg-transparent text-[var(--text-muted)] font-semibold text-sm cursor-pointer transition-all relative min-w-0 ${i === defaultIdx ? "active !bg-[var(--accent)] !text-[var(--accent-text)] shadow" : ""} ${isToday && i !== defaultIdx ? "today-tab" : ""}`}
+                className={`day-tab flex-1 flex flex-col items-center gap-0.5 py-2 px-3 border-none rounded-[calc(var(--radius)-4px)] bg-transparent text-[var(--text-muted)] font-semibold text-sm cursor-pointer transition-all relative min-w-0 ${i === defaultIdx ? "active" : ""} ${isToday && i !== defaultIdx ? "today-tab" : ""}`}
+                style={i === defaultIdx ? { background: "var(--accent)", color: "var(--accent-text)", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" } : undefined}
                 data-day-index={i}
               >
                 <span className="text-[0.72rem] uppercase tracking-wider">{formatDayShort(pdj.date)}</span>

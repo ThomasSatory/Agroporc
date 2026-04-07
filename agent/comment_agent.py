@@ -345,6 +345,149 @@ def generate_commentaires_semaine(
     return commentaires
 
 
+def generate_commentaires_personnage(prenom: str) -> dict[str, list[dict]]:
+    """
+    Génère des commentaires pour un seul personnage et les injecte dans
+    les commentaires de la semaine existants.
+
+    Args:
+        prenom: prénom du personnage (ex: "Adel")
+
+    Returns:
+        dict mis à jour { "LUNDI": [...], ... }
+    """
+    # Charger le personnage cible
+    personnage_file = PERSONNAGES_DIR / f"{prenom.lower()}.json"
+    if not personnage_file.exists():
+        raise FileNotFoundError(f"Personnage introuvable : {personnage_file}")
+    personnage = json.loads(personnage_file.read_text(encoding="utf-8"))
+
+    # Charger les commentaires existants
+    if not COMMENTAIRES_SEMAINE_FILE.exists():
+        raise FileNotFoundError(f"Pas de commentaires semaine existants : {COMMENTAIRES_SEMAINE_FILE}")
+    commentaires = json.loads(COMMENTAIRES_SEMAINE_FILE.read_text(encoding="utf-8"))
+
+    # Construire la description du personnage
+    personnage_desc = _build_personnages_prompt([personnage])
+
+    # === PASSE 1 : commentaires racines du personnage ===
+    system1 = f"""Tu es un générateur de commentaires humoristiques pour un site de plats du jour.
+Tu dois générer des commentaires pour UN SEUL personnage : {personnage['prenom']}.
+
+**PERSONNAGE :**
+
+{personnage_desc}
+
+**RÈGLES DE GÉNÉRATION :**
+
+1. Pour chaque plat, génère 0 ou 1 commentaire de {personnage['prenom']} (pas systématiquement, il ne commente pas TOUS les plats).
+2. Environ 60-70% des plats devraient avoir un commentaire de ce personnage.
+3. Chaque commentaire fait 1-2 phrases MAX. Sois concis et percutant.
+4. **PAS DE RÉPONSES** : Chaque commentaire est indépendant. Pas de champ "reponse_a".
+5. Le ton est décontracté, entre collègues/potes. C'est drôle, jamais méchant.
+6. Le commentaire doit refléter le caractère UNIQUE du personnage (ses tics, ses obsessions, son style).
+
+**FORMAT DE SORTIE :** Réponds UNIQUEMENT en JSON valide."""
+
+    prompt1 = (
+        f"{system1}\n\n"
+        f"Voici les plats du jour de toute la semaine avec les commentaires existants des autres personnages :\n\n"
+        f"{json.dumps(commentaires, ensure_ascii=False, indent=2)}\n\n"
+        f"Génère les commentaires de {personnage['prenom']} pour les plats qui l'inspirent.\n"
+        f"Il peut faire référence aux plats des autres jours.\n\n"
+        f"Réponds en JSON avec cette structure :\n"
+        f'{{\n'
+        f'  "LUNDI": [{{"restaurant": "nom", "plat": "nom", "commentaire": {{"auteur": "{personnage["prenom"]}", "texte": "..."}}}}}},\n'
+        f'  "MARDI": [...],\n'
+        f'  ...\n'
+        f'}}\n'
+        f'Si {personnage["prenom"]} ne commente pas un plat, ne l\'inclus pas dans la liste de ce jour.'
+    )
+
+    print(f"[comment_agent] Passe 1 : Génération des commentaires racines de {prenom}...")
+    raw1 = _run_claude(prompt1, timeout=180)
+    nouveaux = _parse_json_output(raw1)
+
+    # Injecter les commentaires racines dans les données existantes
+    for jour in nouveaux:
+        if jour not in commentaires:
+            continue
+        for new_entry in nouveaux[jour]:
+            resto = new_entry.get("restaurant", "")
+            commentaire = new_entry.get("commentaire")
+            if not commentaire:
+                continue
+            # Trouver le plat correspondant dans les commentaires existants
+            for existing in commentaires[jour]:
+                if existing.get("restaurant") == resto:
+                    # Vérifier que le personnage n'a pas déjà commenté
+                    auteurs = {c.get("auteur") for c in existing.get("commentaires", [])}
+                    if commentaire["auteur"] not in auteurs:
+                        existing["commentaires"].append(commentaire)
+                    break
+
+    # === PASSE 2 : réponses contextuelles du personnage ===
+    system2 = f"""Tu es un générateur de réponses humoristiques pour un site de plats du jour.
+Tu dois générer des RÉPONSES pour UN SEUL personnage : {personnage['prenom']}.
+Il réagit aux commentaires existants des autres personnages.
+
+**PERSONNAGE :**
+
+{personnage_desc}
+
+**RÈGLES DE GÉNÉRATION :**
+
+1. Génère entre 2 et 5 réponses AU TOTAL sur toute la semaine.
+2. Chaque réponse fait 1-2 phrases MAX.
+3. Chaque réponse DOIT avoir un champ "reponse_a" (prénom du personnage auquel il répond) ET un champ "reponse_a_index" (index 0-based du commentaire dans la liste).
+4. La réponse doit RÉELLEMENT réagir au contenu du commentaire.
+5. Ne répond PAS à ses propres commentaires.
+6. N'OBLIGE PAS les réponses. Si aucun commentaire ne se prête à une réponse naturelle, génère moins de réponses.
+7. Le ton est décontracté, entre collègues/potes. C'est drôle, jamais méchant.
+
+**FORMAT DE SORTIE :** Réponds UNIQUEMENT en JSON valide."""
+
+    prompt2 = (
+        f"{system2}\n\n"
+        f"Voici les plats du jour de toute la semaine avec TOUS les commentaires (y compris ceux de {personnage['prenom']}) :\n\n"
+        f"{json.dumps(commentaires, ensure_ascii=False, indent=2)}\n\n"
+        f"Génère des réponses de {personnage['prenom']} aux commentaires des autres.\n"
+        f"Le champ reponse_a_index est l'index (0-based) du commentaire auquel la réponse réagit.\n\n"
+        f"Réponds en JSON avec cette structure :\n"
+        f'{{\n'
+        f'  "LUNDI": [{{"restaurant": "nom", "plat": "nom", "reponses": [{{"auteur": "{personnage["prenom"]}", "texte": "...", "reponse_a": "Y", "reponse_a_index": 0}}]}}],\n'
+        f'  ...\n'
+        f'}}\n'
+        f'Si aucun commentaire ne mérite de réponse pour un jour, omets ce jour.'
+    )
+
+    print(f"[comment_agent] Passe 2 : Génération des réponses de {prenom}...")
+    raw2 = _run_claude(prompt2, timeout=180)
+    reponses = _parse_json_output(raw2)
+
+    # Injecter les réponses
+    for jour in reponses:
+        if jour not in commentaires:
+            continue
+        for rep_entry in reponses[jour]:
+            resto = rep_entry.get("restaurant", "")
+            for existing in commentaires[jour]:
+                if existing.get("restaurant") == resto:
+                    new_reponses = rep_entry.get("reponses", [])
+                    existing["commentaires"] = _insert_responses_after_parent(
+                        existing["commentaires"], new_reponses
+                    )
+                    break
+
+    # Sauvegarder
+    COMMENTAIRES_SEMAINE_FILE.write_text(
+        json.dumps(commentaires, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(f"[comment_agent] Commentaires de {prenom} injectés → {COMMENTAIRES_SEMAINE_FILE.name}")
+
+    return commentaires
+
+
 def load_commentaires_jour(jour: str) -> list[dict]:
     """
     Charge les commentaires pré-générés pour un jour donné.

@@ -100,7 +100,7 @@ function CalendarView({
           </svg>
         </Button>
         <span
-          className="calendar-month-label text-xl font-semibold min-w-[200px] text-center"
+          className="calendar-month-label text-base sm:text-xl font-semibold min-w-[140px] sm:min-w-[200px] text-center"
           id="month-label"
           data-month={latestKey}
           style={{ fontFamily: "var(--font-heading)" }}
@@ -196,12 +196,12 @@ function MonthGrid({
 
     details.push(
       <div key={dateStr} className="day-detail" id={`detail-${dateStr}`}>
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--border)]">
-          <div>
-            <div className="font-semibold text-lg" style={{ fontFamily: "var(--font-heading)" }}>
+        <div className="flex justify-between items-start sm:items-center mb-4 pb-3 border-b border-[var(--border)] gap-2">
+          <div className="min-w-0">
+            <div className="font-semibold text-base sm:text-lg" style={{ fontFamily: "var(--font-heading)" }}>
               {formatDate(dateStr)}
             </div>
-            <div className="text-sm text-[var(--accent)] font-medium">{recoText}</div>
+            <div className="text-xs sm:text-sm text-[var(--accent)] font-medium break-words">{recoText}</div>
           </div>
           <button
             className="bg-transparent border-none text-[var(--text-muted)] cursor-pointer p-1 rounded transition-colors hover:text-[var(--text)]"
@@ -225,7 +225,7 @@ function MonthGrid({
     <div className="calendar-month" data-month={key} style={hidden ? { display: "none" } : undefined}>
       <div className="calendar-grid">
         {dayNames.map((dn) => (
-          <div key={dn} className="text-center text-[0.72rem] font-semibold text-[var(--text-muted)] uppercase tracking-wider py-2">
+          <div key={dn} className="text-center text-[0.62rem] sm:text-[0.72rem] font-semibold text-[var(--text-muted)] uppercase tracking-wider py-1.5 sm:py-2">
             {dn}
           </div>
         ))}
@@ -243,13 +243,13 @@ function HistoryPlat({ plat }: { plat: Plat }) {
   const noteGCls = noteClass(noteG);
 
   return (
-    <div className="py-3 border-b border-[var(--border)] last:border-b-0 flex justify-between items-center gap-3">
+    <div className="py-3 border-b border-[var(--border)] last:border-b-0 flex justify-between items-start sm:items-center gap-2 sm:gap-3">
       <div className="flex-1 min-w-0">
         <div className="text-xs text-[var(--text-muted)] flex items-center gap-1.5">
           <span dangerouslySetInnerHTML={{ __html: getIcon(plat.restaurant) }} className="[&_.icon]:w-3.5 [&_.icon]:h-3.5" />
           {plat.restaurant}
         </div>
-        <div className="text-sm font-medium">
+        <div className="text-sm font-medium break-words">
           {plat.plat} &mdash; {plat.prix || "?"}
         </div>
       </div>

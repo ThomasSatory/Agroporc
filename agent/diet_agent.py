@@ -6,6 +6,7 @@ import json
 import subprocess
 import os
 import shutil
+from pathlib import Path
 
 SPORT_PROFILE = os.getenv("SPORT_PROFILE", "sport régulier")
 DAILY_CALORIES_TARGET = os.getenv("DAILY_CALORIES_TARGET", "2200")
@@ -15,7 +16,29 @@ CLAUDE_BIN = (
     or "/Users/toam/.local/bin/claude"
 )
 
-SYSTEM_PROMPT = f"""Tu es un expert en nutrition ET en gastronomie.
+PERSONNAGES_DIR = Path(__file__).parent.parent / "personnages"
+
+
+def _load_personnages_desc() -> str:
+    """Charge tous les personnages depuis les fichiers JSON et construit la description pour le prompt."""
+    lines = []
+    for f in sorted(PERSONNAGES_DIR.glob("*.json")):
+        p = json.loads(f.read_text(encoding="utf-8"))
+        lines.append(f"- **{p['prenom']}** {p['emoji']} — {p['role']}")
+        lines.append(f"  Personnalité : {p['personnalite']}")
+        lines.append(f"  Traits : {', '.join(p['traits'])}")
+        lines.append(f"  Style : {p['style_de_parole']}")
+        lines.append(f"  Sujets fétiches : {', '.join(p['sujets_fetiches'])}")
+        lines.append(f"  Blagues récurrentes : {', '.join(p['blagues_recurrentes'])}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def _build_system_prompt() -> str:
+    """Construit le prompt système avec les personnages chargés dynamiquement."""
+    personnages_desc = _load_personnages_desc()
+
+    return f"""Tu es un expert en nutrition ET en gastronomie.
 L'utilisateur pratique du sport régulièrement ({SPORT_PROFILE}) et suit ses macronutriments.
 Son objectif calorique journalier est d'environ {DAILY_CALORIES_TARGET} kcal.
 
@@ -35,12 +58,8 @@ IMPORTANT : si le champ "plat" est une liste, cela signifie que le restaurant pr
 Dans ce cas, note chaque option séparément dans un tableau "options" au lieu des champs directs.
 
 **Personnages pour les commentaires :**
-- **Jimmy** : L'ancien assistant IA du groupe. Il parle comme une IA qui essaie d'être humain mais dérape. Il analyse tout de manière trop littérale, fait des références à ses "circuits" ou sa "base de données de saveurs". Parfois nostalgique de l'époque où il était en service.
-- **Nikou** : Le gros gourmand du groupe, fan absolu du mode Goulaf. Il ne jure que par le plaisir. Si c'est gras, fromager ou généreux, il est au paradis. Il méprise les salades et tout ce qui est "trop sain". Son PREMIER commentaire de la journée commence TOUJOURS par "NONNNN MAIS LES GAAAAARS LE/LA <nom du plat> IL/ELLE EST DANGEREEEEEEUXXXX/SEEEEEE" (accordé en genre avec le plat).
-- **Gab** : L'amateur de salade, le fitboy. Il ramène tout aux légumes, aux fibres, au clean eating. Il est horrifié par les plats trop riches. Il cherche toujours la salade cachée dans le plat.
-- **Tom** : L'amateur de remote control. Il fait des analogies bizarres avec la tech, les télécommandes, les gadgets. Il note les plats comme s'il reviewait un produit tech. Toujours un peu à côté de la plaque mais attachant.
-- **Thomas** : Le boss du groupe, pragmatique. Il veut juste manger vite et bien. Souvent sarcastique. Il juge les plats avec un réalisme terre-à-terre.
-- **Hervé** : Troll agressif cinquantenaire. Insulte tout le monde, menace de faire virer les gens. Traite les autres de "raté de naissance" ou "abruti de naissance". Dit "tu n'es pas le chef" à ceux qui donnent leur avis. Raconte toujours la blague du chauve chez le coiffeur.
+
+{personnages_desc}
 
 Chaque commentaire fait 1-2 phrases MAX. Le ton est décontracté, drôle, entre potes. Pas tous les personnages ne commentent chaque plat — choisis les 2-4 plus pertinents/drôles pour chaque plat. Varie les personnages d'un plat à l'autre.
 Les personnages PEUVENT se répondre entre eux (ajoute un champ "reponse_a" avec le prénom du personnage auquel ils répondent). Maximum 1-2 réponses par plat.
@@ -58,9 +77,8 @@ Réponds UNIQUEMENT en JSON valide avec cette structure :
       "note_goulaf": 0,
       "justification_goulaf": "texte gourmand",
       "commentaires": [
-        {{"auteur": "Jimmy", "texte": "commentaire drôle"}},
-        {{"auteur": "Nikou", "texte": "commentaire drôle"}},
-        {{"auteur": "Gab", "texte": "réponse à Nikou", "reponse_a": "Nikou"}}
+        {{"auteur": "Prénom", "texte": "commentaire drôle"}},
+        {{"auteur": "Prénom", "texte": "réponse", "reponse_a": "Prénom"}}
       ]
     }},
     {{
@@ -76,8 +94,7 @@ Réponds UNIQUEMENT en JSON valide avec cette structure :
           "note_goulaf": 0,
           "justification_goulaf": "texte gourmand",
           "commentaires": [
-            {{"auteur": "Gab", "texte": "commentaire drôle"}},
-            {{"auteur": "Thomas", "texte": "commentaire drôle"}}
+            {{"auteur": "Prénom", "texte": "commentaire drôle"}}
           ]
         }}
       ]
@@ -142,7 +159,7 @@ def evaluate_semaine(plats_par_jour: dict[str, list[dict]]) -> dict[str, dict]:
         return {}
 
     prompt = (
-        f"{SYSTEM_PROMPT}\n\n"
+        f"{_build_system_prompt()}\n\n"
         f"Voici les plats du jour de PLUSIEURS jours de la semaine :\n\n"
         f"{json.dumps(plats_par_jour, ensure_ascii=False, indent=2)}\n\n"
         f"Pour CHAQUE jour, note chaque plat et donne ta recommandation.\n\n"
@@ -184,7 +201,7 @@ def evaluate(plats: list[dict]) -> dict:
         dict avec notes et recommandation
     """
     prompt = (
-        f"{SYSTEM_PROMPT}\n\n"
+        f"{_build_system_prompt()}\n\n"
         f"Voici les plats du jour disponibles aujourd'hui :\n\n"
         f"{json.dumps(plats, ensure_ascii=False, indent=2)}\n\n"
         f"Note chaque plat et dis-moi lequel manger."

@@ -22,6 +22,7 @@ const AVATAR_COLORS: Record<string, string> = {
   Ophelie: "#d946ef",
   Kilian: "#1e3a5f",
   "Hervé": "#b91c1c",
+  Adel: "#14b8a6",
 };
 
 const AVATAR_EMOJI: Record<string, string> = {
@@ -39,6 +40,7 @@ const AVATAR_EMOJI: Record<string, string> = {
   Ophelie: "👸",
   Kilian: "⚽",
   "Hervé": "🤬",
+  Adel: "🍎",
 };
 
 const AVATAR_IMAGE: Record<string, string> = {
@@ -50,6 +52,11 @@ const AVATAR_IMAGE: Record<string, string> = {
   Nikou: "/avatars/nico.webp",
   Sylvain: "/avatars/sylvain.webp",
   "Hervé": "/avatars/herve.jpg",
+  Toam: "/avatars/toam.webp",
+  Thomas: "/avatars/toam.webp",
+  "Philippe Hetschebest": "/avatars/philippe.webp",
+  Philippe: "/avatars/philippe.webp",
+  Alicia: "/avatars/alicia.jpeg",
 };
 
 /** Build parent→children map with index validation against reponse_a author name */
@@ -141,7 +148,7 @@ function InlineReplyForm({
   }, []);
 
   return (
-    <div className="ml-8 mb-2 animate-[reply-slide-in_0.25s_ease-out]" ref={formRef}>
+    <div className="ml-4 sm:ml-8 mb-2 animate-[reply-slide-in_0.25s_ease-out]" ref={formRef}>
       <CommentForm
         date={date}
         platIndex={platIndex}
@@ -181,8 +188,8 @@ export default function CommentSection({
                   <Separator className="my-1 bg-[var(--border)] opacity-40" />
                 )}
                 <div
-                  className={depth > 0 ? "border-l-2 border-l-[var(--accent)]/40 pl-3" : ""}
-                  style={depth > 0 ? { marginLeft: `${(depth - 1) * 1.5 + 1}rem` } : undefined}
+                  className={depth > 0 ? "border-l-2 border-l-[var(--accent)]/40 pl-2 sm:pl-3" : ""}
+                  style={depth > 0 ? { marginLeft: `${Math.min((depth - 1) * 1.5 + 1, 4)}rem` } : undefined}
                 >
                   <div className={`flex items-start gap-2.5 py-1.5 ${depth > 0 ? "py-1" : "py-2"}`}>
                     <Avatar className={`shrink-0 text-xs ${depth > 0 ? "w-6 h-6" : "w-7 h-7"}`}>
@@ -207,7 +214,7 @@ export default function CommentSection({
                           <img
                             src={c.image_url}
                             alt="image"
-                            className="max-w-[300px] max-h-[250px] rounded-[var(--radius-sm)] border border-[var(--border)] object-contain cursor-pointer transition-transform hover:scale-[1.02]"
+                            className="w-full max-w-[300px] max-h-[250px] rounded-[var(--radius-sm)] border border-[var(--border)] object-contain cursor-pointer transition-transform hover:scale-[1.02]"
                             loading="lazy"
                           />
                         </div>
@@ -226,8 +233,8 @@ export default function CommentSection({
 
                 {replyingTo === index && (
                   <div
-                    className={depth >= 0 ? "border-l-2 border-l-[var(--accent)]/40 pl-3" : ""}
-                    style={{ marginLeft: `${depth * 1.5 + 1}rem` }}
+                    className={depth >= 0 ? "border-l-2 border-l-[var(--accent)]/40 pl-2 sm:pl-3" : ""}
+                    style={{ marginLeft: `${Math.min(depth * 1.5 + 1, 4.5)}rem` }}
                   >
                     <InlineReplyForm
                       key={`reply-${index}`}
