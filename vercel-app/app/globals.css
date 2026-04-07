@@ -6,34 +6,34 @@
 
 /* ── Theme: Normal (dark elegant) ──────────────── */
 :root, [data-theme="normal"] {
-  --bg: #0c0c0f;
+  --bg: #0b0b12;
   --bg-pattern: none;
-  --surface: #16161d;
-  --surface-hover: #1e1e28;
-  --surface-accent: #1a1a26;
-  --border: #28283a;
-  --border-accent: #3a3a55;
-  --text: #eaeaf0;
-  --text-secondary: #9898aa;
-  --text-muted: #6a6a80;
-  --accent: #c8a44e;
-  --accent-glow: rgba(200, 164, 78, 0.15);
-  --accent-text: #0c0c0f;
+  --surface: #151520;
+  --surface-hover: #1e1e2c;
+  --surface-accent: #1a1a28;
+  --border: #2e2e48;
+  --border-accent: #4a4a6a;
+  --text: #ededf4;
+  --text-secondary: #a0a0c0;
+  --text-muted: #787898;
+  --accent: #d4a520;
+  --accent-glow: rgba(212, 165, 32, 0.2);
+  --accent-text: #0b0b12;
   --good: #4ade80;
-  --good-bg: rgba(74, 222, 128, 0.1);
-  --good-border: rgba(74, 222, 128, 0.25);
+  --good-bg: rgba(74, 222, 128, 0.14);
+  --good-border: rgba(74, 222, 128, 0.35);
   --ok: #fbbf24;
-  --ok-bg: rgba(251, 191, 36, 0.1);
-  --ok-border: rgba(251, 191, 36, 0.25);
+  --ok-bg: rgba(251, 191, 36, 0.14);
+  --ok-border: rgba(251, 191, 36, 0.35);
   --bad: #f87171;
-  --bad-bg: rgba(248, 113, 113, 0.1);
-  --bad-border: rgba(248, 113, 113, 0.25);
+  --bad-bg: rgba(248, 113, 113, 0.14);
+  --bad-border: rgba(248, 113, 113, 0.35);
   --radius: 16px;
   --radius-sm: 8px;
-  --shadow: 0 2px 16px rgba(0,0,0,0.3);
+  --shadow: 0 2px 16px rgba(0,0,0,0.35);
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --nav-bg: rgba(12, 12, 15, 0.85);
+  --nav-bg: rgba(11, 11, 18, 0.88);
   --card-stripe: none;
 }
 
@@ -214,6 +214,24 @@ body::before {
   animation: slideDown 0.2s ease-out;
 }
 .day-detail.visible { display: block; }
+
+/* ── Today dot pulse ─────────────────────────── */
+.today-dot {
+  animation: todayPulse 2s ease-in-out infinite;
+}
+.day-tab.active .today-dot {
+  animation: none;
+  background: var(--accent-text) !important;
+}
+.day-tab:not(.active) .today-dot {
+  background: var(--text-muted) !important;
+  animation: none;
+  opacity: 0.5;
+}
+@keyframes todayPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.6); }
+}
 
 /* ── Animations ───────────────────────────────── */
 @keyframes slideDown {

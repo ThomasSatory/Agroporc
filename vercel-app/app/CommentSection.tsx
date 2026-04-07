@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { Commentaire } from "@/lib/db";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import CommentForm from "./CommentForm";
@@ -39,6 +39,17 @@ const AVATAR_EMOJI: Record<string, string> = {
   Ophelie: "👸",
   Kilian: "⚽",
   "Hervé": "🤬",
+};
+
+const AVATAR_IMAGE: Record<string, string> = {
+  Adel: "/avatars/adel.webp",
+  Kilian: "/avatars/kilian.webp",
+  Jimmy: "/avatars/jimmy.webp",
+  Gab: "/avatars/gab.webp",
+  Tom: "/avatars/tom.webp",
+  Nikou: "/avatars/nico.webp",
+  Sylvain: "/avatars/sylvain.webp",
+  "Hervé": "/avatars/herve.jpg",
 };
 
 /** Build parent→children map with index validation against reponse_a author name */
@@ -175,6 +186,9 @@ export default function CommentSection({
                 >
                   <div className={`flex items-start gap-2.5 py-1.5 ${depth > 0 ? "py-1" : "py-2"}`}>
                     <Avatar className={`shrink-0 text-xs ${depth > 0 ? "w-6 h-6" : "w-7 h-7"}`}>
+                      {AVATAR_IMAGE[c.auteur] && (
+                        <AvatarImage src={AVATAR_IMAGE[c.auteur]} alt={c.auteur} />
+                      )}
                       <AvatarFallback style={{ background: AVATAR_COLORS[c.auteur] || "#6b7280" }} className="text-xs">
                         {AVATAR_EMOJI[c.auteur] || c.auteur[0]}
                       </AvatarFallback>

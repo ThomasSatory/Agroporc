@@ -72,11 +72,15 @@ export function ClientScripts() {
           t.style.background = "transparent";
           t.style.color = "var(--text-muted)";
           t.style.boxShadow = "none";
+          const dot = t.querySelector<HTMLElement>(".today-dot");
+          if (dot) dot.style.background = "var(--accent)";
         });
         tab.classList.add("active");
         tab.style.background = "var(--accent)";
         tab.style.color = "var(--accent-text)";
         tab.style.boxShadow = "0 1px 4px rgba(0,0,0,0.2)";
+        const activeDot = tab.querySelector<HTMLElement>(".today-dot");
+        if (activeDot) activeDot.style.background = "var(--accent-text)";
         document.querySelectorAll<HTMLElement>("[data-day-panel]").forEach((panel) => {
           panel.style.display = panel.dataset.dayPanel === idx ? "" : "none";
         });

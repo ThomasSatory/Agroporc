@@ -24,7 +24,6 @@ load_dotenv()
 from scrapers import bistrot_trefle, pause_gourmande, truck_muche
 from agent import diet_agent, repair_team, comment_agent
 from messages import generer_messages_semaine, maj_message_jour
-from generate_site import generate_site
 from publish import publish_pdj
 from jours_feries import est_ferie
 
@@ -38,7 +37,6 @@ async def run_jour() -> dict:
     ferie = est_ferie(date.today())
     if ferie:
         print(f"[pipeline:jour] Jour férié ({ferie}) — pas de scraping")
-        generate_site()
         return {"date": str(date.today()), "ferie": ferie, "plats": []}
 
     print("[pipeline:jour] Démarrage scraping du jour...")
@@ -109,9 +107,6 @@ async def run_jour() -> dict:
 
     # ── Publier les jours futurs (Trèfle + Truck, PG = coming soon) ──────
     await _publier_jours_futurs(loop)
-
-    # Générer le site statique
-    generate_site()
 
     # Publier vers Vercel
     publish_pdj(output)
@@ -400,9 +395,6 @@ async def run_semaine() -> dict:
         }
         publish_pdj(future_output)
         print(f"[pipeline:semaine] Jour futur publié : {day_name} ({future_date})")
-
-    # Générer le site statique
-    generate_site()
 
     # Publier vers Vercel
     publish_pdj(output)

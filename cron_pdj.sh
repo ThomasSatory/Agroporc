@@ -15,7 +15,4 @@ echo "$(date '+%Y-%m-%d %H:%M') [cron] Lancement pipeline mode=$MODE"
 # Pipeline
 python3 main.py "$MODE" >> output/cron.log 2>&1
 
-# Déploiement site
-bash deploy_site.sh >> output/cron.log 2>&1
-
 echo "$(date '+%Y-%m-%d %H:%M') [cron] Terminé"

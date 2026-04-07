@@ -35,7 +35,8 @@ export default function RootLayout({
         <nav className="sticky top-0 z-50 border-b border-[var(--border)] px-3 sm:px-6 backdrop-blur-xl" style={{ background: "var(--nav-bg)" }}>
           <div className="mx-auto flex h-14 max-w-[860px] items-center justify-between">
             <div className="nav-left flex items-center gap-3 sm:gap-8">
-              <a href="/" className="text-lg sm:text-xl font-bold text-[var(--accent)] no-underline tracking-wide" style={{ fontFamily: "var(--font-heading)" }}>
+              <a href="/" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-[var(--accent)] no-underline tracking-wide" style={{ fontFamily: "var(--font-heading)" }}>
+                <img src="/logo.jpg" alt="Logo Plats du Jour" className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover" />
                 Plats du Jour
               </a>
               <div className="nav-links flex gap-1" id="nav-links">

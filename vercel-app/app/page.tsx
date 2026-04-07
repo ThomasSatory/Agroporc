@@ -63,12 +63,12 @@ function WeekView({ weekPdj }: { weekPdj: PdjEntry[] }) {
             return (
               <button
                 key={pdj.date}
-                className={`day-tab flex-1 flex flex-col items-center gap-0.5 py-2 px-3 border-none rounded-[calc(var(--radius)-4px)] bg-transparent text-[var(--text-muted)] font-semibold text-sm cursor-pointer transition-all relative min-w-0 ${i === defaultIdx ? "active !bg-[var(--accent)] !text-[var(--accent-text)] shadow" : ""} ${isToday && i !== defaultIdx ? "!text-[var(--accent)]" : ""}`}
+                className={`day-tab flex-1 flex flex-col items-center gap-0.5 py-2 px-3 border-none rounded-[calc(var(--radius)-4px)] bg-transparent text-[var(--text-muted)] font-semibold text-sm cursor-pointer transition-all relative min-w-0 ${i === defaultIdx ? "active !bg-[var(--accent)] !text-[var(--accent-text)] shadow" : ""} ${isToday && i !== defaultIdx ? "today-tab" : ""}`}
                 data-day-index={i}
               >
                 <span className="text-[0.72rem] uppercase tracking-wider">{formatDayShort(pdj.date)}</span>
                 <span className="text-lg font-bold leading-none">{new Date(pdj.date + "T12:00:00").getDate()}</span>
-                {isToday && <span className="w-1 h-1 rounded-full bg-current absolute bottom-1" />}
+                {isToday && <span className="today-dot w-1.5 h-1.5 rounded-full bg-[var(--accent)] absolute bottom-1" />}
               </button>
             );
           })}

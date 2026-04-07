@@ -1,7 +1,5 @@
 """
 Publie les données PDJ vers l'API Vercel.
-Remplace generate_site() + deploy_site.sh.
-
 Usage :
   python publish.py                  # publie le pdj.json courant
   python publish.py --historique     # publie tout l'historique (migration initiale)
