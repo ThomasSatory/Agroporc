@@ -1,9 +1,22 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Drawer } from "@/components/ui/drawer";
 import { ImagePlus, X, Upload } from "lucide-react";
+
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
 
 export default function CommentForm({
   date,
@@ -27,32 +40,9 @@ export default function CommentForm({
   const [imageUrl, setImageUrl] = useState("");
   const [showImageInput, setShowImageInput] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  if (!open) {
-    return (
-      <button
-        className="mt-3 w-full border border-dashed border-[var(--border)] rounded-[var(--radius)] text-[var(--text-secondary)] py-2 px-3 text-sm cursor-pointer transition-all bg-transparent hover:border-[var(--accent)] hover:text-[var(--accent)]"
-        onClick={() => setOpen(true)}
-      >
-        + Ajouter un commentaire
-      </button>
-    );
-  }
-
-  function handleCancel() {
-    if (onCancel) {
-      onCancel();
-    } else {
-      setOpen(false);
-    }
-    setAuteur("");
-    setTexte("");
-    setImageUrl("");
-    setShowImageInput(false);
-    setImageError(false);
-    setError("");
-  }
+  const isMobile = useIsMobile();
 
   const processFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -73,6 +63,31 @@ export default function CommentForm({
     reader.readAsDataURL(file);
   }, []);
 
+  function handleCancel() {
+    if (onCancel) {
+      onCancel();
+    } else {
+      setOpen(false);
+    }
+    setAuteur("");
+    setTexte("");
+    setImageUrl("");
+    setShowImageInput(false);
+    setImageError(false);
+    setError("");
+  }
+
+  if (!open) {
+    return (
+      <button
+        className="mt-3 w-full border border-dashed border-[var(--border)] rounded-[var(--radius)] text-[var(--text-secondary)] py-2 px-3 text-sm cursor-pointer transition-all bg-transparent hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        onClick={() => setOpen(true)}
+      >
+        + Ajouter un commentaire
+      </button>
+    );
+  }
+
   function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) processFile(file);
@@ -89,8 +104,6 @@ export default function CommentForm({
       }
     }
   }
-
-  const [dragOver, setDragOver] = useState(false);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -146,8 +159,8 @@ export default function CommentForm({
     }
   }
 
-  return (
-    <form className="mt-3 flex flex-col gap-2" onSubmit={handleSubmit}>
+  const formContent = (
+    <form className={isMobile ? "flex flex-col gap-3" : "mt-3 flex flex-col gap-2"} onSubmit={handleSubmit}>
       {reponseA && (
         <div className="text-xs text-[var(--accent)] px-2 py-1.5 bg-[var(--accent-glow)] rounded-[var(--radius-sm)] border-l-[3px] border-l-[var(--accent)]">
           ↩ En réponse à {reponseA}
@@ -256,20 +269,22 @@ export default function CommentForm({
       )}
 
       <div className="flex gap-2 justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCancel}
-          className="text-[var(--text-secondary)]"
-        >
-          Annuler
-        </Button>
+        {!isMobile && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleCancel}
+            className="text-[var(--text-secondary)]"
+          >
+            Annuler
+          </Button>
+        )}
         <Button
           type="submit"
           size="sm"
           disabled={loading || !auteur.trim() || (!texte.trim() && !imageUrl)}
-          className="bg-[var(--accent)] text-[var(--bg)] font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-40"
+          className={`bg-[var(--accent)] text-[var(--bg)] font-semibold hover:bg-[var(--accent)]/90 disabled:opacity-40 ${isMobile ? "w-full h-10 text-sm" : ""}`}
         >
           {loading ? "..." : "Envoyer"}
         </Button>
@@ -277,4 +292,18 @@ export default function CommentForm({
       {error && <p className="text-[var(--bad)] text-sm m-0">{error}</p>}
     </form>
   );
+
+  if (isMobile) {
+    return (
+      <Drawer
+        open={open}
+        onClose={handleCancel}
+        title={reponseA ? `Répondre à ${reponseA}` : "Ajouter un commentaire"}
+      >
+        {formContent}
+      </Drawer>
+    );
+  }
+
+  return formContent;
 }

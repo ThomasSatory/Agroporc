@@ -243,6 +243,39 @@ body::before {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Mobile Drawer ───────────────────────────── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  animation: drawer-fade-in 0.2s ease-out;
+}
+.drawer-content {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.4);
+  max-height: 85dvh;
+  animation: drawer-slide-up 0.25s ease-out;
+  touch-action: none;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+@keyframes drawer-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes drawer-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 /* ── Responsive ───────────────────────────────── */
 @media (max-width: 640px) {
   .calendar-cell { font-size: 0.75rem; min-height: 38px; }
