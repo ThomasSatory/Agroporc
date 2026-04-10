@@ -17,10 +17,7 @@ from . import feedback_agent
 PERSONNAGES_DIR = Path(__file__).parent.parent / "personnages"
 COMMENTAIRES_SEMAINE_FILE = Path(__file__).parent.parent / "output" / "commentaires_semaine.json"
 
-CLAUDE_BIN = (
-    shutil.which("claude")
-    or "/Users/toam/.local/bin/claude"
-)
+CLAUDE_BIN = shutil.which("claude")
 
 JOURS = ["LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI"]
 
@@ -181,14 +178,25 @@ def _parse_json_output(raw: str) -> dict | list:
 
 
 def _run_claude(prompt: str, timeout: int = 120) -> str:
-    """Exécute Claude CLI et retourne la sortie brute."""
-    result = subprocess.run(
-        [CLAUDE_BIN, "-p", prompt, "--output-format", "text"],
-        capture_output=True, text=True, timeout=timeout,
+    """Appelle Claude via CLI si dispo, sinon via API directe."""
+    if CLAUDE_BIN:
+        result = subprocess.run(
+            [CLAUDE_BIN, "-p", prompt, "--output-format", "text"],
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"claude CLI error: {result.stderr.strip()}")
+        return result.stdout.strip()
+
+    # Fallback API directe
+    from agent.diet_agent import _make_client
+    client = _make_client()
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
     )
-    if result.returncode != 0:
-        raise RuntimeError(f"claude CLI error: {result.stderr.strip()}")
-    return result.stdout.strip()
+    return message.content[0].text.strip()
 
 
 def generate_commentaires_jour(plats: list[dict]) -> list[dict]:

@@ -1,23 +1,31 @@
-FROM python:3.12-slim
+FROM mcr.microsoft.com/playwright/python:v1.43.0-jammy
 
-# Dépendances système pour Playwright/Chromium
-RUN apt-get update && apt-get install -y \
-    curl \
-    cron \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
+
+# Installer Node.js + Claude CLI
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g @anthropic-ai/claude-code && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN playwright install chromium --with-deps
 
 COPY . .
 
-# Cron job : tous les jours à 9h, output vers /app/logs/
-RUN mkdir -p /app/logs
-RUN echo "0 9 * * 1-5 root cd /app && python main.py >> /app/logs/plats-du-jour.log 2>&1" > /etc/cron.d/plats-du-jour
-RUN chmod 0644 /etc/cron.d/plats-du-jour
-RUN crontab /etc/cron.d/plats-du-jour
+RUN mkdir -p /app/logs /app/output/historique
+
+# Script d'entrée qui charge l'env pour cron
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Cron : lundi 7h30 UTC = semaine, mardi-vendredi = jour
+RUN echo '30 7 * * 1 root /entrypoint.sh semaine >> /app/logs/cron.log 2>&1' > /etc/cron.d/pdj && \
+    echo '30 7 * * 2-5 root /entrypoint.sh jour >> /app/logs/cron.log 2>&1' >> /etc/cron.d/pdj && \
+    echo '' >> /etc/cron.d/pdj && \
+    chmod 0644 /etc/cron.d/pdj && \
+    crontab /etc/cron.d/pdj
 
 CMD ["cron", "-f"]

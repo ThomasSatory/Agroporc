@@ -6,6 +6,7 @@ Nécessite une navigation préalable via le selectbox pour initialiser la sessio
 """
 import re
 import asyncio
+from datetime import date
 from playwright.async_api import async_playwright
 
 SELECTBOX_URL = (
@@ -49,11 +50,37 @@ async def scrape() -> dict | None:
 def _parse(body: str) -> dict | None:
     """Parse le texte de la page pour extraire le plat du jour."""
     # Le plat du jour est nommé "PLAT DU JOUR DU [JOUR] [DATE]"
-    # et sa description est sur la ligne suivante
+    # et sa description est sur la ligne suivante.
+    # La page peut lister plusieurs jours — on cherche celui d'aujourd'hui.
     lines = [l.strip() for l in body.splitlines() if l.strip()]
 
+    today = date.today()
+    today_day = str(today.day)
+
+    MOIS_FR = {
+        1: "JANVIER", 2: "FÉVRIER", 3: "MARS", 4: "AVRIL",
+        5: "MAI", 6: "JUIN", 7: "JUILLET", 8: "AOÛT",
+        9: "SEPTEMBRE", 10: "OCTOBRE", 11: "NOVEMBRE", 12: "DÉCEMBRE",
+    }
+    today_month = MOIS_FR[today.month]
+
+    # Chercher d'abord le plat du jour d'aujourd'hui
+    today_index = None
+    all_indices = []
     for i, line in enumerate(lines):
-        # "PLAT DU JOUR DU LUNDI..." = le produit réel (pas la catégorie de nav)
+        if re.search(r"PLAT DU JOUR\s+DU\s+", line.upper()):
+            all_indices.append(i)
+            upper = line.upper()
+            # Matcher "PLAT DU JOUR DU VENDREDI 10 AVRIL 2026"
+            if today_day in upper and today_month in upper:
+                today_index = i
+
+    # Utiliser le plat d'aujourd'hui, ou le dernier listé en fallback
+    target = today_index if today_index is not None else (all_indices[-1] if all_indices else None)
+
+    for i, line in enumerate(lines):
+        if i != target:
+            continue
         if re.search(r"PLAT DU JOUR\s+DU\s+", line.upper()):
             # La description est sur la ligne suivante non vide
             description = ""

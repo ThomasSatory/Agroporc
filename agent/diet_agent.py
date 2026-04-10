@@ -1,20 +1,39 @@
 """
 Agent diététicien — appelle Claude via le CLI `claude -p` (auth OAuth gérée par Claude Code).
-Pas besoin de clé API séparée.
+Fallback sur l'API directe si le CLI n'est pas disponible.
 """
 import json
 import subprocess
 import os
 import shutil
+import anthropic
 from pathlib import Path
 
 SPORT_PROFILE = os.getenv("SPORT_PROFILE", "sport régulier")
 DAILY_CALORIES_TARGET = os.getenv("DAILY_CALORIES_TARGET", "2200")
 
-CLAUDE_BIN = (
-    shutil.which("claude")
-    or "/Users/toam/.local/bin/claude"
-)
+CLAUDE_BIN = shutil.which("claude")
+
+
+def _call_claude(prompt: str, timeout: int = 120) -> str:
+    """Appelle Claude via CLI si dispo, sinon via API directe."""
+    if CLAUDE_BIN:
+        result = subprocess.run(
+            [CLAUDE_BIN, "-p", prompt, "--output-format", "text"],
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"claude CLI error: {result.stderr.strip()}")
+        return result.stdout.strip()
+
+    # Fallback API directe
+    client = _make_client()
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return message.content[0].text.strip()
 
 PERSONNAGES_DIR = Path(__file__).parent.parent / "personnages"
 
@@ -113,15 +132,21 @@ Réponds UNIQUEMENT en JSON valide avec cette structure :
 }}"""
 
 
-def _get_oauth_token() -> str:
+def _make_client() -> anthropic.Anthropic:
     """
-    Lit le token OAuth de Claude Code depuis le macOS Keychain.
-    Fallback sur ANTHROPIC_API_KEY si présente dans l'environnement.
+    Crée un client Anthropic.
+    Ordre de priorité :
+      1. ANTHROPIC_AUTH_TOKEN (OAuth / bearer token)
+      2. ANTHROPIC_API_KEY (clé API classique)
+      3. Token OAuth depuis le macOS Keychain (dev local)
     """
-    # Fallback : clé API classique dans l'env
-    env_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if env_key:
-        return env_key
+    auth_token = os.getenv("ANTHROPIC_AUTH_TOKEN", "")
+    if auth_token:
+        return anthropic.Anthropic(auth_token=auth_token)
+
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if api_key:
+        return anthropic.Anthropic(api_key=api_key)
 
     # Lire le token OAuth depuis le Keychain macOS
     try:
@@ -135,13 +160,13 @@ def _get_oauth_token() -> str:
             oauth = data.get("claudeAiOauth", {})
             token = oauth.get("accessToken", "")
             if token:
-                return token
+                return anthropic.Anthropic(auth_token=token)
     except Exception as e:
         print(f"[diet_agent] Erreur lecture Keychain : {e}")
 
     raise ValueError(
-        "Aucun token trouvé. Configurez ANTHROPIC_API_KEY dans .env "
-        "ou assurez-vous d'être connecté à Claude Code."
+        "Aucun token trouvé. Configurez ANTHROPIC_AUTH_TOKEN ou ANTHROPIC_API_KEY "
+        "dans .env, ou assurez-vous d'être connecté à Claude Code."
     )
 
 
@@ -174,15 +199,7 @@ def evaluate_semaine(plats_par_jour: dict[str, list[dict]]) -> dict[str, dict]:
         f'}}'
     )
 
-    result = subprocess.run(
-        [CLAUDE_BIN, "-p", prompt, "--output-format", "text"],
-        capture_output=True, text=True, timeout=120,
-    )
-
-    if result.returncode != 0:
-        raise RuntimeError(f"claude CLI error: {result.stderr.strip()}")
-
-    raw = result.stdout.strip()
+    raw = _call_claude(prompt, timeout=120)
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -192,7 +209,7 @@ def evaluate_semaine(plats_par_jour: dict[str, list[dict]]) -> dict[str, dict]:
 
 def evaluate(plats: list[dict]) -> dict:
     """
-    Évalue les plats via `claude -p` (CLI Claude Code, auth OAuth intégrée).
+    Évalue les plats via Claude (CLI ou API directe).
 
     Args:
         plats: liste de dicts { restaurant, plat, prix }
@@ -207,15 +224,7 @@ def evaluate(plats: list[dict]) -> dict:
         f"Note chaque plat et dis-moi lequel manger."
     )
 
-    result = subprocess.run(
-        [CLAUDE_BIN, "-p", prompt, "--output-format", "text"],
-        capture_output=True, text=True, timeout=60,
-    )
-
-    if result.returncode != 0:
-        raise RuntimeError(f"claude CLI error: {result.stderr.strip()}")
-
-    raw = result.stdout.strip()
+    raw = _call_claude(prompt, timeout=60)
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -234,8 +243,7 @@ def evaluate_image(image_url: str, context: str = "") -> str:
     Returns:
         texte extrait décrivant le plat
     """
-    token = _get_oauth_token()
-    client = anthropic.Anthropic(api_key=token)
+    client = _make_client()
 
     message = client.messages.create(
         model="claude-sonnet-4-6",

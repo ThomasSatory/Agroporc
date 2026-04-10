@@ -221,9 +221,8 @@ def repair(failing_scrapers: dict[str, str]) -> dict:
     Returns:
         dict avec le rapport de réparation par scraper
     """
-    from agent.diet_agent import _get_oauth_token
-    token = _get_oauth_token()
-    client = anthropic.Anthropic(api_key=token)
+    from agent.diet_agent import _make_client
+    client = _make_client()
 
     rapport = {}
     for scraper_name, error in failing_scrapers.items():
