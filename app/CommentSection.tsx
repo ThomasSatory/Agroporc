@@ -166,13 +166,29 @@ export default function CommentSection({
   readOnly?: boolean;
 }) {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { childrenMap, topLevel } = buildCommentTree(commentaires);
-  const fullFlatList = flattenTree(topLevel, childrenMap);
-  const COLLAPSED_COUNT = 3;
-  const shouldCollapse = fullFlatList.length > COLLAPSED_COUNT && !showAll;
-  const flatList = shouldCollapse ? fullFlatList.slice(0, COLLAPSED_COUNT) : fullFlatList;
-  const hiddenCount = fullFlatList.length - flatList.length;
+  const flatList = flattenTree(topLevel, childrenMap);
+  const totalCount = flatList.length;
+
+  if (!expanded) {
+    if (readOnly && totalCount === 0) return null;
+    return (
+      <div className="mt-4">
+        <Separator className="mb-2 bg-[var(--border)]" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setExpanded(true)}
+          className="text-[var(--text-muted)] text-xs h-auto py-1.5 px-2 hover:text-[var(--accent)] hover:bg-transparent"
+        >
+          💬 {totalCount === 0
+            ? "Laisser un commentaire"
+            : `${totalCount} commentaire${totalCount > 1 ? "s" : ""}`}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -295,26 +311,23 @@ export default function CommentSection({
               </div>
             );
           })}
-          {(hiddenCount > 0 || showAll) && fullFlatList.length > COLLAPSED_COUNT && (
-            <div className="mt-1 mb-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAll(!showAll)}
-                className="text-[var(--text-muted)] text-xs h-auto py-1 px-2 hover:text-[var(--accent)] hover:bg-transparent"
-              >
-                {showAll
-                  ? "Masquer les commentaires"
-                  : `Afficher ${hiddenCount} commentaire${hiddenCount > 1 ? "s" : ""} de plus`}
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
       {!readOnly && replyingTo === null && (
         <CommentForm date={date} platIndex={platIndex} />
       )}
+
+      <div className="mt-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setExpanded(false)}
+          className="text-[var(--text-muted)] text-xs h-auto py-1 px-2 hover:text-[var(--accent)] hover:bg-transparent"
+        >
+          Masquer les commentaires
+        </Button>
+      </div>
     </>
   );
 }
