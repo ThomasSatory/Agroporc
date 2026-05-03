@@ -4,3 +4,6 @@ __pycache__/
 output/
 node_modules/
 .vercel/
+
+# XML sources Ciqual (gros fichiers, régénérables depuis https://ciqual.anses.fr/)
+ciqual/data/*.xml

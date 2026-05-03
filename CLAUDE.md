@@ -33,7 +33,7 @@ Cron automation: `cron_pdj.sh [jour|semaine]`
 ## Architecture
 
 ### Data flow
-Python scrapers → AI diet agent evaluation → AI comment generation → `publish.py` POSTs to `/api/update` → Vercel Postgres (`pdj_entries` table, JSONB column) → Next.js SSR reads from DB
+Python scrapers → AI diet agent evaluation (LLM décompose en ingrédients + grammages, macros agrégées via table Ciqual) → AI comment generation → `publish.py` POSTs to `/api/update` → Vercel Postgres (`pdj_entries` table, JSONB column) → Next.js SSR reads from DB
 
 ### Frontend structure
 - `app/page.tsx` — Main page (SSR), builds the full week view with day tabs, mode selector, plat cards
@@ -48,7 +48,8 @@ Python scrapers → AI diet agent evaluation → AI comment generation → `publ
 
 ### Python pipeline structure (`plats-du-jour/`)
 - `scrapers/` — One module per restaurant (`bistrot_trefle.py` uses Playwright, `pause_gourmande.py` and `truck_muche.py` are async)
-- `agent/diet_agent.py` — Claude-based nutritional evaluation (scores dishes 1-10 in both modes)
+- `ciqual/` — Intégration de la table Ciqual ANSES pour le calcul déterministe des macros (cf. `ciqual/README.md`)
+- `agent/diet_agent.py` — Claude-based nutritional evaluation (scores dishes 1-10 in both modes). Demande au LLM des ingrédients + grammages, agrège les macros via Ciqual, fallback LLM si >30% non matché.
 - `agent/comment_agent.py` — Generates in-character comments from persona JSON files
 - `agent/repair_team.py` — Auto-fixes scraper failures
 - `agent/feedback_agent.py` — Syncs human comment feedback into character profiles
