@@ -5,6 +5,7 @@ import type { Plat, PdjEntry, Recommandation } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CommentSection from "./CommentSection";
+import MacrosPanel from "./MacrosPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -349,19 +350,11 @@ function PlatCard({ plat, date, platIndex, isRecoSportif, isRecoGoulaf }: { plat
 
         <div className="text-[var(--accent)] font-bold mb-4">{plat.prix}</div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-          {[
-            { value: nutri?.calories ?? "?", label: "kcal" },
-            { value: `${nutri?.proteines_g ?? "?"}g`, label: "Protéines" },
-            { value: `${nutri?.glucides_g ?? "?"}g`, label: "Glucides" },
-            { value: `${nutri?.lipides_g ?? "?"}g`, label: "Lipides" },
-          ].map((m) => (
-            <div key={m.label} className="text-center py-2.5 px-1 bg-[var(--surface-accent)] rounded-[var(--radius-sm)] border border-[var(--border)]">
-              <span className="block font-bold text-base tabular-nums text-[var(--text)]">{m.value}</span>
-              <span className="block text-[0.7rem] text-[var(--text-muted)] uppercase tracking-wider mt-0.5">{m.label}</span>
-            </div>
-          ))}
-        </div>
+        <MacrosPanel
+          nutri={nutri}
+          ingredients={plat.ingredients_detail}
+          source={plat.nutrition_source}
+        />
 
         <p className="mode-sportif text-sm text-[var(--text-secondary)] leading-relaxed">{plat.justification}</p>
         <p className="mode-goulaf text-sm text-[var(--text-secondary)] leading-relaxed" style={{ display: "none" }}>

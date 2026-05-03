@@ -19,12 +19,26 @@ export interface Plat {
     glucides_g: number;
     lipides_g: number;
   };
+  /** "ciqual" : agrégé depuis la table Ciqual ; "llm" : estimation directe Claude (fallback) */
+  nutrition_source?: "ciqual" | "llm";
+  ingredients_detail?: IngredientDetail[];
   note?: number;
   justification?: string;
   note_goulaf?: number;
   justification_goulaf?: string;
   commentaires?: Commentaire[];
   coming_soon?: boolean;
+}
+
+export interface IngredientDetail {
+  nom_query: string;
+  grammes: number;
+  matched_nom: string | null;
+  matched_code: string | null;
+  kcal: number;
+  prot: number;
+  gluc: number;
+  lip: number;
 }
 
 export interface Commentaire {
