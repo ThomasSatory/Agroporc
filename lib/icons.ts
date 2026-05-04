@@ -14,7 +14,7 @@ export function getIcon(restaurant: string): string {
   return RESTAURANT_ICON[restaurant] || DEFAULT_ICON;
 }
 
-export type RestaurantLinkKind = "order" | "phone" | "facebook";
+export type RestaurantLinkKind = "order" | "facebook";
 
 export interface RestaurantLink {
   kind: RestaurantLinkKind;
@@ -29,11 +29,6 @@ export const RESTAURANT_LINKS: Record<string, RestaurantLink[]> = {
       url: "https://bistrot-trefle.com/commander-emporter-livraison-gratuite-restaurant-bistrot-trefle-avignon-agroparc/",
       label: "Commander",
     },
-    {
-      kind: "phone",
-      url: "tel:+33490882899",
-      label: "04 90 88 28 99",
-    },
   ],
   "La Pause Gourmande": [
     {
@@ -41,18 +36,8 @@ export const RESTAURANT_LINKS: Record<string, RestaurantLink[]> = {
       url: "https://lapausegourmandeagroparc.foxorders.com",
       label: "Commander",
     },
-    {
-      kind: "phone",
-      url: "tel:+33490149009",
-      label: "04 90 14 90 09",
-    },
   ],
   "Le Truck Muche": [
-    {
-      kind: "phone",
-      url: "tel:+33620808555",
-      label: "06 20 80 85 55",
-    },
     {
       kind: "facebook",
       url: "https://www.facebook.com/letruckmuche/",
