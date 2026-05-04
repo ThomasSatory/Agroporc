@@ -199,6 +199,14 @@ async def _publier_jours_futurs(loop):
     # Publier chaque jour futur (sans commentaires — ils seront générés le jour même)
     for i, day_name in enumerate(DAY_NAMES[today_idx + 1:], start=1):
         future_date = date.today() + timedelta(days=i)
+
+        # Si le jour futur est férié, publier un marqueur ferie sans plats ni commentaires
+        ferie_nom = est_ferie(future_date)
+        if ferie_nom:
+            publish_pdj({"date": str(future_date), "ferie": ferie_nom, "plats": []})
+            print(f"[pipeline:futurs] Jour férié publié : {day_name} ({future_date}) — {ferie_nom}")
+            continue
+
         day_eval = future_evaluations.get(day_name, {})
         day_plats = day_eval.get("plats", future_days.get(day_name, []))
 

@@ -167,7 +167,14 @@ export default function CommentSection({
 }) {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const { childrenMap, topLevel } = buildCommentTree(commentaires);
+  // Filtre défensif : on a déjà observé en prod des entrées malformées
+  // (strings au lieu d'objets) renvoyées par le pipeline sur des jours
+  // particuliers. Sans ça, l'expand crash à l'accès de c.auteur.
+  const safeCommentaires = (commentaires ?? []).filter(
+    (c): c is Commentaire =>
+      c != null && typeof c === "object" && typeof (c as Commentaire).auteur === "string"
+  );
+  const { childrenMap, topLevel } = buildCommentTree(safeCommentaires);
   const flatList = flattenTree(topLevel, childrenMap);
   const totalCount = flatList.length;
 
@@ -192,11 +199,11 @@ export default function CommentSection({
 
   return (
     <>
-      {commentaires.length > 0 && (
+      {safeCommentaires.length > 0 && (
         <div className="mt-4">
           <Separator className="mb-3 bg-[var(--border)]" />
           {flatList.map(({ index, depth }, pos) => {
-            const c = commentaires[index];
+            const c = safeCommentaires[index];
             const showTopSeparator = depth === 0 && pos > 0 && flatList[pos - 1].depth === 0;
 
             return (
