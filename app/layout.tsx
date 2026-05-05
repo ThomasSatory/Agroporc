@@ -56,6 +56,14 @@ export default function RootLayout({
                 </a>
               </div>
             </div>
+            <button id="cart-btn" className="relative flex items-center justify-center w-9 h-9 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:text-[var(--text)] hover:border-[var(--border-accent)] transition-colors" aria-label="Panier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+              <span id="cart-count" style={{ display: "none" }} className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 rounded-full text-[0.6rem] font-bold bg-[var(--accent)] text-[var(--accent-text)]">0</span>
+            </button>
             <div className="theme-selector flex items-center gap-1 bg-[var(--surface)] border border-[var(--border)] rounded-full p-[3px]">
               <button
                 className="theme-btn flex items-center justify-center gap-1.5 px-3 py-1.5 border-none rounded-full bg-transparent text-[var(--text-muted)] text-xs font-semibold cursor-pointer transition-all min-h-8"
@@ -114,6 +122,30 @@ export default function RootLayout({
             </svg>
             <span>Le projet est open source &mdash; viens contribuer sur GitHub&nbsp;!</span>
           </a>
+        </div>
+        {/* Cart overlay */}
+        <div id="cart-overlay" style={{ display: "none", position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100 }} />
+        {/* Cart drawer */}
+        <div id="cart-drawer" style={{ position: "fixed", top: 0, right: 0, height: "100%", width: "360px", maxWidth: "100%", zIndex: 101, display: "flex", flexDirection: "column", transform: "translateX(100%)", transition: "transform 0.3s ease" }} className="bg-[var(--surface)] border-l border-[var(--border)]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+            <span className="font-bold text-base" style={{ fontFamily: "var(--font-heading)" }}>Mon panier</span>
+            <button id="cart-close-btn" className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:text-[var(--text)] cursor-pointer transition-colors" aria-label="Fermer le panier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <div id="cart-items" className="flex-1 overflow-y-auto px-5 py-4" />
+          <div id="cart-footer" style={{ display: "none" }} className="px-5 py-4 border-t border-[var(--border)]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-[var(--text-secondary)]">Total estimé</span>
+              <span id="cart-total" className="font-bold text-base text-[var(--accent)]">0,00 €</span>
+            </div>
+            <button id="cart-clear-btn" className="w-full text-xs font-medium py-2 px-4 rounded-[var(--radius)] border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:text-[var(--bad)] hover:border-[var(--bad)] transition-colors cursor-pointer">
+              Vider le panier
+            </button>
+          </div>
         </div>
         <ClientScripts />
       </body>

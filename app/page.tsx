@@ -407,8 +407,22 @@ function PlatCard({ plat, date, platIndex, isRecoSportif, isRecoGoulaf }: { plat
           {plat.justification_goulaf || plat.justification}
         </p>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-between items-center gap-2">
           <OrderLinks restaurant={plat.restaurant} />
+          <button
+            className="add-to-cart-btn inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-accent)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--accent-glow)] transition-colors whitespace-nowrap"
+            data-restaurant={plat.restaurant}
+            data-plat={plat.plat}
+            data-prix={plat.prix}
+            aria-label={`Ajouter ${plat.plat} au panier`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+            Ajouter
+          </button>
         </div>
 
         <CommentSection commentaires={plat.commentaires || []} date={date} platIndex={platIndex} />
